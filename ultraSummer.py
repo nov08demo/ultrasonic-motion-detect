@@ -10,6 +10,7 @@ TRIG_2 =11 #11 #5
 ECHO_2 =7 #7 #3
 TRIG_1 =5
 ECHO_1 =3
+DISTANCE = 20
 maxTime = 0.04
 
 GPIO.setwarnings(True)
@@ -64,10 +65,10 @@ def useTwoUltrasonics(TRIG_1, ECHO_1, TRIG_2, ECHO_2):
         tempRight = getDistance(TRIG_1,ECHO_1, "#1")
         tempLeft = getDistance(TRIG_2,ECHO_2, "#2")
         
-        if(tempLeft[0] < 20):
+        if(tempLeft[0] < DISTANCE):
              leftUltraTimeDistane = tempLeft
             
-        if(tempRight[0] < 20):
+        if(tempRight[0] < DISTANCE):
             rightUltraTimeDistance = tempRight
            
         term = rightUltraTimeDistance[1]-leftUltraTimeDistane[1]
