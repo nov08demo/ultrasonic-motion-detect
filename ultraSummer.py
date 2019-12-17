@@ -83,8 +83,6 @@ def useTwoUltrasonics(TRIG_1, ECHO_1, TRIG_2, ECHO_2):
             rightUltraTimeDistance = (0,0)
             leftUltraTimeDistane = (0,0)
            
-            
-
 if __name__ == '__main__':
     try:
         useTwoUltrasonics(TRIG_1, ECHO_1, TRIG_2, ECHO_2)

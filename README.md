@@ -25,12 +25,17 @@ in ultraSummer.py
 The HC-SR04 ultrasonic sensor uses SONAR to determine the distance of an object just like the bats do. It offers excellent non-contact range detection with high accuracy and stable readings in an easy-to-use package from ***2 cm to 400 cm*** or 1” to 13 feet
 
 #### Technical Specifications
-Power Supply − +5V DC
-Quiescent Current − <2mA
-Working Current − 15mA
-Effectual Angle − <15°
-Ranging Distance − 2cm – 400 cm/1″ – 13ft
-Resolution − 0.3 cm
-Measuring Angle − 30 degree
+- Power Supply − +5V DC
+- Quiescent Current − <2mA
+- Working Current − 15mA
+- Effectual Angle − <15°
+- Ranging Distance − 2cm – 400 cm/1″ – 13ft
+- Resolution − 0.3 cm
+- Measuring Angle − 30 degree
+
+## Max Distance 
+HC-SR04 can detect untill 600cm
+
+![](./images/maxDistance.jpg)
 
 
