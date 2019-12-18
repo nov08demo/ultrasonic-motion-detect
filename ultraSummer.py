@@ -2,7 +2,10 @@ import RPi.GPIO as GPIO
 import time
 import sys
 import threading
+import socketio
 
+sio = socketio.Client()
+sio.connect('http://summer-development-env-dev002.us-east-1.elasticbeanstalk.com')
 
 GPIO.setmode(GPIO.BOARD)
 
@@ -16,7 +19,6 @@ maxTime = 0.04
 GPIO.setwarnings(True)
 
 print("start meare...")
-
 
 def getDistance(TRIG, ECHO, nameOfUltra):
     GPIO.setup(TRIG,GPIO.OUT)
@@ -57,7 +59,10 @@ def mainLooping(TRIG, ECHO):
             print("Measured distance = %.1f cm" % dist)
             sys.stdout.flush()
         time.sleep(0.1)         
-        
+
+def sendMessage(direction):
+    sio.emit('vision.swipeRight', {'direction': direction})
+
 def useTwoUltrasonics(TRIG_1, ECHO_1, TRIG_2, ECHO_2):
     rightUltraTimeDistance = (0,0)
     leftUltraTimeDistane = (0,0)
@@ -74,11 +79,13 @@ def useTwoUltrasonics(TRIG_1, ECHO_1, TRIG_2, ECHO_2):
         term = rightUltraTimeDistance[1]-leftUltraTimeDistane[1]
         #it calulated last detected time. it mean rightUltra detect hands ahead of leftUltra
         if (term < 0 and term > -1):
+            sendMessage('left')
             print("right to left detected")
             rightUltraTimeDistance = (0,0)
             leftUltraTimeDistane = (0,0)
           
         elif (term > 0 and term < 1.2):
+            sendMessage('right')
             print("left to right detected")
             rightUltraTimeDistance = (0,0)
             leftUltraTimeDistane = (0,0)
