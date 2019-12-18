@@ -40,10 +40,10 @@ def getDistance(TRIG, ECHO, nameOfUltra):
   
     distance = ((stop-start)*34300)/2
     #if(distance<10):
-        #print("Measured distance = %.1f cm" % distance)
+    print("Measured distance = %.1f cm" % distance)
        # print("what is name?",nameOfUltra)
         #sys.stdout.flush()
-    time.sleep(0.0003)
+    time.sleep(1)
     
     return distance, stop
 
@@ -62,25 +62,25 @@ def useTwoUltrasonics(TRIG_1, ECHO_1, TRIG_2, ECHO_2):
     leftUltraTimeDistane = (0,0)
     while True:
         tempRight = getDistance(TRIG_1,ECHO_1, "#1")
-        tempLeft = getDistance(TRIG_2,ECHO_2, "#2")
+        #tempLeft = getDistance(TRIG_2,ECHO_2, "#2")
         
-        if(tempLeft[0] < 20):
-             leftUltraTimeDistane = tempLeft
+        #if(tempLeft[0] < 20):
+        #     leftUltraTimeDistane = tempLeft
             
-        if(tempRight[0] < 20):
-            rightUltraTimeDistance = tempRight
+        #if(tempRight[0] < 20):
+        #    rightUltraTimeDistance = tempRight
            
-        term = rightUltraTimeDistance[1]-leftUltraTimeDistane[1]
+        #term = rightUltraTimeDistance[1]-leftUltraTimeDistane[1]
         #it calulated last detected time. it mean rightUltra detect hands ahead of leftUltra
-        if (term < 0 and term > -1):
-            print("right to left detected")
-            rightUltraTimeDistance = (0,0)
-            leftUltraTimeDistane = (0,0)
+        #if (term < 0 and term > -1):
+           # print("right to left detected")
+        #    rightUltraTimeDistance = (0,0)
+        #    leftUltraTimeDistane = (0,0)
           
-        elif (term > 0 and term < 1.2):
-            print("left to right detected")
-            rightUltraTimeDistance = (0,0)
-            leftUltraTimeDistane = (0,0)
+        #elif (term > 0 and term < 1.2):
+            #print("left to right detected")
+         #   rightUltraTimeDistance = (0,0)
+         #   leftUltraTimeDistane = (0,0)
            
             
 
