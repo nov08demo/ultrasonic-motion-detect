@@ -2,7 +2,10 @@ import RPi.GPIO as GPIO
 import time
 import sys
 import threading
+import socketio
 
+sio = socketio.Client()
+sio.connect('http://summer-development-env-dev002.us-east-1.elasticbeanstalk.com')
 
 GPIO.setmode(GPIO.BOARD)
 
@@ -17,8 +20,7 @@ GPIO.setwarnings(True)
 
 print("start meare...")
 
-
-def getDistance(TRIG, ECHO, nameOfUltra):
+def getDistance(TRIG, ECHO):
     GPIO.setup(TRIG,GPIO.OUT)
     GPIO.setup(ECHO, GPIO.IN)
     #set trigger to high
@@ -41,10 +43,10 @@ def getDistance(TRIG, ECHO, nameOfUltra):
   
     distance = ((stop-start)*34300)/2
     #if(distance<10):
-    print("Measured distance = %.1f cm" % distance)
-       # print("what is name?",nameOfUltra)
-        #sys.stdout.flush()
-    time.sleep(1)
+    #print("Measured distance = %.1f cm" % distance)
+      
+    time.sleep(0.0003)
+>>>>>>> 5a7854c18dd4a2393aa3ae2850aa6e974a27a86f
     
     return distance, stop
 
@@ -57,13 +59,16 @@ def mainLooping(TRIG, ECHO):
             print("Measured distance = %.1f cm" % dist)
             sys.stdout.flush()
         time.sleep(0.1)         
-        
+
+def sendMessage(direction):
+    sio.emit('vision.swipeRight', {'direction': direction})
+
 def useTwoUltrasonics(TRIG_1, ECHO_1, TRIG_2, ECHO_2):
     rightUltraTimeDistance = (0,0)
     leftUltraTimeDistane = (0,0)
     while True:
-        tempRight = getDistance(TRIG_1,ECHO_1, "#1")
-        tempLeft = getDistance(TRIG_2,ECHO_2, "#2")
+        tempRight = getDistance(TRIG_1,ECHO_1)
+        tempLeft = getDistance(TRIG_2,ECHO_2)
         
         if(tempLeft[0] < DISTANCE):
              leftUltraTimeDistane = tempLeft
@@ -75,17 +80,17 @@ def useTwoUltrasonics(TRIG_1, ECHO_1, TRIG_2, ECHO_2):
         term = rightUltraTimeDistance[1]-leftUltraTimeDistane[1]
         it calulated last detected time. it mean rightUltra detect hands ahead of leftUltra
         if (term < 0 and term > -1):
-        	print("right to left detected")
-        	rightUltraTimeDistance = (0,0)
-        	leftUltraTimeDistane = (0,0)
+            sendMessage('left')
+            print("right to left detected")
+            rightUltraTimeDistance = (0,0)
+            leftUltraTimeDistane = (0,0)
           
         elif (term > 0 and term < 1.2):
-        	rint("left to right detected")
-         	rightUltraTimeDistance = (0,0)
-         	eftUltraTimeDistane = (0,0)
+            sendMessage('right')
+            print("left to right detected")
+            rightUltraTimeDistance = (0,0)
+            leftUltraTimeDistane = (0,0)
            
-            
-
 if __name__ == '__main__':
     try:
         useTwoUltrasonics(TRIG_1, ECHO_1, TRIG_2, ECHO_2)
