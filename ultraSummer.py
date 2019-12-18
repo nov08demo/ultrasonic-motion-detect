@@ -20,7 +20,7 @@ GPIO.setwarnings(True)
 
 print("start meare...")
 
-def getDistance(TRIG, ECHO, nameOfUltra):
+def getDistance(TRIG, ECHO):
     GPIO.setup(TRIG,GPIO.OUT)
     GPIO.setup(ECHO, GPIO.IN)
     #set trigger to high
@@ -43,9 +43,8 @@ def getDistance(TRIG, ECHO, nameOfUltra):
   
     distance = ((stop-start)*34300)/2
     #if(distance<10):
-        #print("Measured distance = %.1f cm" % distance)
-       # print("what is name?",nameOfUltra)
-        #sys.stdout.flush()
+    #print("Measured distance = %.1f cm" % distance)
+      
     time.sleep(0.0003)
     
     return distance, stop
@@ -67,8 +66,8 @@ def useTwoUltrasonics(TRIG_1, ECHO_1, TRIG_2, ECHO_2):
     rightUltraTimeDistance = (0,0)
     leftUltraTimeDistane = (0,0)
     while True:
-        tempRight = getDistance(TRIG_1,ECHO_1, "#1")
-        tempLeft = getDistance(TRIG_2,ECHO_2, "#2")
+        tempRight = getDistance(TRIG_1,ECHO_1)
+        tempLeft = getDistance(TRIG_2,ECHO_2)
         
         if(tempLeft[0] < DISTANCE):
              leftUltraTimeDistane = tempLeft
