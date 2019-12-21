@@ -5,7 +5,7 @@ import threading
 import socketio
 
 sio = socketio.Client()
-sio.connect('http://summer-development-env-dev002.us-east-1.elasticbeanstalk.com')
+#sio.connect('http://summer-development-env-dev002.us-east-1.elasticbeanstalk.com')
 
 GPIO.setmode(GPIO.BOARD)
 
@@ -46,7 +46,6 @@ def getDistance(TRIG, ECHO):
     #print("Measured distance = %.1f cm" % distance)
       
     time.sleep(0.0003)
->>>>>>> 5a7854c18dd4a2393aa3ae2850aa6e974a27a86f
     
     return distance, stop
 
@@ -78,7 +77,7 @@ def useTwoUltrasonics(TRIG_1, ECHO_1, TRIG_2, ECHO_2):
 
            
         term = rightUltraTimeDistance[1]-leftUltraTimeDistane[1]
-        it calulated last detected time. it mean rightUltra detect hands ahead of leftUltra
+        #it calulated last detected time. it mean rightUltra detect hands ahead of leftUltra
         if (term < 0 and term > -1):
             sendMessage('left')
             print("right to left detected")
