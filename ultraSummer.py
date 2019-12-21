@@ -8,7 +8,8 @@ sio = socketio.Client()
 #sio.connect('http://summer-development-env-dev002.us-east-1.elasticbeanstalk.com')
 
 GPIO.setmode(GPIO.BOARD)
-
+TRIG_3 = 10
+ECHO_3 = 12
 TRIG_2 =11 #11 #5
 ECHO_2 =7 #7 #3
 TRIG_1 =5
@@ -18,7 +19,7 @@ maxTime = 0.04
 
 GPIO.setwarnings(True)
 
-print("start meare...")
+print("start gesture...")
 
 def getDistance(TRIG, ECHO):
     GPIO.setup(TRIG,GPIO.OUT)
@@ -62,37 +63,44 @@ def mainLooping(TRIG, ECHO):
 def sendMessage(direction):
     sio.emit('vision.swipeRight', {'direction': direction})
 
-def useTwoUltrasonics(TRIG_1, ECHO_1, TRIG_2, ECHO_2):
+def useThreeUltrasonics(TRIG_1, ECHO_1, TRIG_2, ECHO_2, TRIG_3, ECHO_3):
     rightUltraTimeDistance = (0,0)
     leftUltraTimeDistane = (0,0)
+    middleUltraTimeDistance = (0,0)
     while True:
         tempRight = getDistance(TRIG_1,ECHO_1)
         tempLeft = getDistance(TRIG_2,ECHO_2)
-        
+        tempMiddle = getDistance(TRIG_3, ECHO_3)
         if(tempLeft[0] < DISTANCE):
              leftUltraTimeDistane = tempLeft
             
         if(tempRight[0] < DISTANCE):
             rightUltraTimeDistance = tempRight
-
-           
-        term = rightUltraTimeDistance[1]-leftUltraTimeDistane[1]
-        #it calulated last detected time. it mean rightUltra detect hands ahead of leftUltra
-        if (term < 0 and term > -1):
+        
+        if(tempMiddle[0] < DISTANCE):
+            middleUltraTimeDistance = tempMiddle
+        
+        firstPass = rightUltraTimeDistance[0] - middleUltraTimeDistance[0]
+        secondPass = middleUltraTimeDistance[0] - leftUltraTimeDistane[0]
+        
+        if(firstPass < 0 and secondPass < 0):
             sendMessage('left')
             print("right to left detected")
             rightUltraTimeDistance = (0,0)
             leftUltraTimeDistane = (0,0)
-          
-        elif (term > 0 and term < 1.2):
+            middleUltraTimeDistance = (0,0)
+            time.sleep(0.2)
+        if(firstPass > 0 and secondPass > 0):
             sendMessage('right')
             print("left to right detected")
             rightUltraTimeDistance = (0,0)
             leftUltraTimeDistane = (0,0)
+            middleUltraTimeDistance = (0,0)
+            time.sleep(0.2)
            
 if __name__ == '__main__':
     try:
-        useTwoUltrasonics(TRIG_1, ECHO_1, TRIG_2, ECHO_2)
+        useThreeUltrasonics(TRIG_1, ECHO_1, TRIG_2, ECHO_2, TRIG_3, ECHO_3)
     except Exception as exc:
         print("Stop by user or error",exc)
         GPIO.cleanup()
