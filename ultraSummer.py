@@ -257,7 +257,7 @@ if __name__ == '__main__':
         #dataPlotting()
         
         #semi functional ultrasonic solution
-    
+        
         startTime=0
         checkTime=0
         while True:
@@ -303,7 +303,7 @@ if __name__ == '__main__':
         plot.xlabel('TIME')
         plot.ylabel('DISTANCE (cm)')
         plot.show()
-    
+        
         
     except KeyboardInterrupt:
         print("terminated by user")
