@@ -182,7 +182,7 @@ def clearStack():
     #middleStack=[]
     rightStack=[]
 def rawPlot():
-    for x in range(1000):
+    for x in range(200):
         startThreads()
     plot.plot(leftStack, leftDist, label="left")
     plot.plot(irStackLeft, irLeft,label="IR left")
@@ -193,7 +193,7 @@ def rawPlot():
     plot.legend()
     plot.show()
 def dataPlotting():
-    for x in range(500):
+    for x in range(400):
         startThreads()
     for y in range(len(left)):
         if(y<len(right) and y< len(irLeftBin)):
@@ -251,16 +251,18 @@ def getDirection():
   
 if __name__ == '__main__':
     try:
-        startTime=0
-        checkTime=0
+        
         #startThreads()
         #rawPlot() 
         #dataPlotting()
         
         #semi functional ultrasonic solution
+    
+        startTime=0
+        checkTime=0
         while True:
             startThreads()
-            if(len(left) >0 and len(right) >0 ):
+            if(len(left) >0 and len(right) >0 and len(irLeftBin)):
                 l = left.pop()
                 m = irLeftBin.pop()
                 r = right.pop()
@@ -280,7 +282,7 @@ if __name__ == '__main__':
                 startTime = time.time()
             checkTime= time.time()
             timeout = checkTime-startTime
-            #if no gesture detected within 2 seconds set the flags down 
+            #if no gesture detected within 1 seconds set the flags down 
             if (timeout) > 1:
                 flagNeg =False
                 flagPos =False
@@ -301,7 +303,7 @@ if __name__ == '__main__':
         plot.xlabel('TIME')
         plot.ylabel('DISTANCE (cm)')
         plot.show()
-        
+    
         
     except KeyboardInterrupt:
         print("terminated by user")
