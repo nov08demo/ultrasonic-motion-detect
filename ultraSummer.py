@@ -10,8 +10,15 @@ from threading import Thread
 import matplotlib.pyplot as plot
 import socketio
 from cloudwatch_logger import CloudwatchLogger
-#sio = socketio.Client()
-#sio.connect('http://summer-development-env-dev002.us-east-1.elasticbeanstalk.com')
+
+sio = socketio.Client()
+
+@sio.on('connect')
+def on_connect():
+    print('connected to the brain')
+
+sio.connect('http://summer-development-env-dev001.us-east-1.elasticbeanstalk.com')
+
 
 GPIO.setmode(GPIO.BCM)
 
@@ -289,10 +296,12 @@ if __name__ == '__main__':
             
             if(flagNeg==True and delta==1):
                 flagNeg =False
+                sio.emit('edge.swipe', data={'type': 'right'})
                 print("---->")
                 time.sleep(0.05)
             if(flagPos==True and delta==-1):
                 flagPos = False
+                sio.emit('edge.swipe', data={'type': 'left'})
                 print("<----")
                 time.sleep(0.05)
             #gesture =getDirection()
@@ -306,5 +315,6 @@ if __name__ == '__main__':
         
         
     except KeyboardInterrupt:
+        sio.disconnect()
         print("terminated by user")
         GPIO.cleanup()
