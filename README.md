@@ -72,4 +72,23 @@ We utilized channel 1 for our IR sensor, but any of the 8 can be used.
 
 ![mcp3008 pin diagram](./images/mcp3008-pindiagram.png)
 
+## 3 Sensor Implementation
+
+### Processing Data
+We take input from all three sensors, a signal is generated which can be analysed. The combination of the signals forms a unique waveform that can then be matched to a specific gesture.
+
+### Graphing the Outputs
+There are 2 ways we can categorize a swipe gesture. One is "wave" which is when ur palm is facing the sensors. The other is "natural", which is when ur fingertips are pointed at the sensors.
+#### Swipe Left to Right
+#### Wave gesture
+![wave](./images/LTR_wave.png)
+#### Natural gesture
+![natural](./images/LTR_natural.png)
+#### Swipe Right to Left
+##### Wave gesture
+![wave](./images/RTL_wave.png)
+##### Natural Gesture
+![natural](./images/RTL_natural.png)
+
+
 
