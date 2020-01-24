@@ -17,7 +17,7 @@ sio = socketio.Client()
 def on_connect():
     print('connected to the brain')
 
-sio.connect('http://summer-development-env-dev001.us-east-1.elasticbeanstalk.com')
+sio.connect('http://summer-dev.us-east-1.elasticbeanstalk.com')
 
 
 GPIO.setmode(GPIO.BCM)
@@ -66,6 +66,10 @@ rightDist = []
 diffStack = []
 diff = []
 
+#calibration variables
+maxDist = 25
+delay = 0.5
+timeout = 1
 
 
 DISTANCE = 30
@@ -138,14 +142,14 @@ def detect(TRIG, ECHO, ID):
         if(ID=="L"):
             leftStack.append(time.time())
             leftDist.append(distance)
-            if(distance <30):
+            if(distance <maxDist):
                 left.append(0)
             else:
                 left.append(1)
         elif(ID=="R"):
             rightStack.append(time.time())
             rightDist.append(distance)
-            if(distance <30):
+            if(distance <maxDist):
                 right.append(0)
             else:
                 right.append(1)
@@ -161,14 +165,14 @@ def detectIR(channel):
         if(channel==1):
             irStackLeft.append(time.time())
             irLeft.append(dist)
-            if(dist <30):
+            if(dist <maxDist):
                 irLeftBin.append(0)
             else:
                 irLeftBin.append(1)
         elif(channel==0):
             irStackRight.append(time.time())
             irRight.append(dist)
-            if(dist <30):
+            if(dist <maxDist):
                 irRightBin.append(0)
             else:
                 irRightBin.append(1)
@@ -288,9 +292,9 @@ if __name__ == '__main__':
                 flagNeg = True
                 startTime = time.time()
             checkTime= time.time()
-            timeout = checkTime-startTime
+            elapsed = checkTime-startTime
             #if no gesture detected within 1 seconds set the flags down 
-            if (timeout) > 1:
+            if elapsed > timeout:
                 flagNeg =False
                 flagPos =False
             
@@ -298,12 +302,12 @@ if __name__ == '__main__':
                 flagNeg =False
                 sio.emit('edge.swipe', data={'type': 'right'})
                 print("---->")
-                time.sleep(0.05)
+                time.sleep(delay)
             if(flagPos==True and delta==-1):
                 flagPos = False
                 sio.emit('edge.swipe', data={'type': 'left'})
                 print("<----")
-                time.sleep(0.05)
+                time.sleep(delay)
             #gesture =getDirection()
             #printMessage(gesture)
             #clearStack()
