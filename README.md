@@ -32,9 +32,7 @@ These variables can be modified to better perform under different environments.
 
 ![](./images/SideMountTV.jpeg)
 
-### 2 ultrasonic + 1 IR implementation 
-![](./images/top-sensors.jpeg)
-![](./images/front-sensors.jpeg)
+
 
 ### Raspberry Pi Pin Map
 ![](./images/raspberryPinMap.jpg)
@@ -119,52 +117,5 @@ When only using the 2 ultrasonic sensors mounted to the side of the TV screen:
 We have a built in testing function that allows you to run through a random series of gestures and the system checks for whether or not they were correct. The result is then outputed, using swipeDetectTest(n). Where n is the number of trials. On completion the function also generates a processed data plot for further analysis. 
 
 ![](./images/sampleTestOutput.png)
-
-
-### About Sharp 2Y0A02 (Infrared Sensor)
-The 2Y0A02 is similar to the HC-SR04, but uses infrared light to measure distance. It has a range between 20-150 cm.
-
-#### Technical specifications
-- Range: 20-150cm
-- Consumption Current 33 mA
-- Supply voltage 4.5 to 5,5 V
-
-#### Accuracy with white and grey surfaces 
-![graph](./images/2y0a02_graph.png)
-
-### About MCP3008 ADC 
-The sharp infrared sensor outputs an analog signal, for this to be processed by the Raspberry pi we need to convert it to a digital signal. The MCP3008 does this for us, it has 8 channels that can convert an analog to a 10 bit digital signal. 
-
-#### Wiring 
-We utilized channel 1 for our IR sensor, but any of the 8 can be used. 
-- VDD -> 3.3 V
-- VREF -> 3.3 V
-- AGN -> GND
-- CLK -> GPIO18
-- DOUT -> GPIO23
-- DIN -> GPIO24
-- CS/SHDN -> GPIO25
-- DGND -> GND
-
-![mcp3008 pin diagram](./images/mcp3008-pindiagram.png)
-
-## 3 Sensor Implementation
-
-### Processing Data
-We take input from all three sensors, a signal is generated which can be analysed. The combination of the signals forms a unique waveform that can then be matched to a specific gesture.
-
-### Graphing the Outputs
-There are 2 ways we can categorize a swipe gesture. One is "wave" which is when ur palm is facing the sensors. The other is "natural", which is when ur fingertips are pointed at the sensors.
-#### Swipe Left to Right
-#### Wave gesture
-![wave](./images/LTR_wave.png)
-#### Natural gesture
-![natural](./images/LTR_natural.png)
-#### Swipe Right to Left
-##### Wave gesture
-![wave](./images/RTL_wave.png)
-##### Natural Gesture
-![natural](./images/RTL_natural.png)
-
 
 
