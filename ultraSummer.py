@@ -10,6 +10,9 @@ from threading import Thread
 import matplotlib.pyplot as plot
 import socketio
 from cloudwatch_logger import CloudwatchLogger
+from matplotlib.animation import FuncAnimation
+from random import randint
+
 
 sio = socketio.Client()
 
@@ -17,7 +20,7 @@ sio = socketio.Client()
 def on_connect():
     print('connected to the brain')
 
-sio.connect('http://summer-dev.us-east-1.elasticbeanstalk.com')
+#sio.connect('http://summer-dev.us-east-1.elasticbeanstalk.com')
 
 
 GPIO.setmode(GPIO.BCM)
@@ -47,6 +50,7 @@ ECHO_R = 2
 
 #set GPIO direction (in/ out)
 
+testSequence = ["swipe left", "swipe right"]
 leftStack=[]
 left =[]
 leftDist=[]
@@ -66,27 +70,18 @@ rightDist = []
 diffStack = []
 diff = []
 
-#calibration variables
-maxDist = 25
-delay = 0.5
-timeout = 1
 
 
-DISTANCE = 30
-maxTime = 0.04
 
-flagPos = False
-flagNeg =False
-flagComplete = False
+
+
+
+
 #log = CloudwatchLogger(os.getenv('LOG_GROUP'), os.getenv('LOG_STREAM'), __file__)
 GPIO.setwarnings(True)
 #log.info('Listening for socket...')
 
 
-
-
-def sendMessage(direction):
-    sio.emit('vision.swipeRight', {'direction': direction})
 
 
 #@sio.on('edge.startEdge')
@@ -100,16 +95,10 @@ def start(data):
     log.info('Starting...')
     sio.emit('edge.startSuccessful')
     
-#@sio.on('edge.stopEdge')
-def stop(data):
-    global run
-    run = False
-    log.info('Stopping...')
-    sio.emit('edge.stopSuccessful')
-    GPIO.cleanup()
+
     
-    
-def detect(TRIG, ECHO, ID):
+#calculating and processing distance for ultrasonic sensors    
+def detect(TRIG, ECHO, ID, maxDist):
     
     GPIO.setup(TRIG, GPIO.OUT)
     GPIO.setup(ECHO, GPIO.IN)
@@ -142,6 +131,7 @@ def detect(TRIG, ECHO, ID):
         if(ID=="L"):
             leftStack.append(time.time())
             leftDist.append(distance)
+            
             if(distance <maxDist):
                 left.append(0)
             else:
@@ -149,6 +139,7 @@ def detect(TRIG, ECHO, ID):
         elif(ID=="R"):
             rightStack.append(time.time())
             rightDist.append(distance)
+
             if(distance <maxDist):
                 right.append(0)
             else:
@@ -157,44 +148,51 @@ def detect(TRIG, ECHO, ID):
     else:
         return False
  
-
-def detectIR(channel):
+#calculating and processing distance for infrared sensors 
+def detectIR(channel, maxDist):
     v = (mcp.read_adc(channel) / 1023.0) * 3.3
     dist = 16.2537 * v**4 - 129.893 * v**3 + 382.268 * v**2 - 512.611 * v + 301.439
-    if(dist < 100):
-        if(channel==1):
-            irStackLeft.append(time.time())
-            irLeft.append(dist)
-            if(dist <maxDist):
-                irLeftBin.append(0)
-            else:
-                irLeftBin.append(1)
-        elif(channel==0):
-            irStackRight.append(time.time())
-            irRight.append(dist)
-            if(dist <maxDist):
-                irRightBin.append(0)
-            else:
-                irRightBin.append(1)
     
-def startThreads():
-    leftThread = Thread(target=detect, args=[TRIG_L, ECHO_L, "L"])
-    irleftThread = Thread(target=detectIR, args=[1])
-    irRightThread = Thread(target=detectIR, args=[0])
-    rightThread = Thread(target=detect, args=[TRIG_R, ECHO_R, "R"])
+    if(channel==1):
+        irStackLeft.append(time.time())
+        irLeft.append(dist)
+        if(dist <maxDist):
+            irLeftBin.append(0)
+        else:
+            irLeftBin.append(1)
+    elif(channel==0):
+        irStackRight.append(time.time())
+        irRight.append(dist)
+        
+        if(dist <maxDist):
+            irRightBin.append(0)
+        else:
+            irRightBin.append(1)
+    
+def startThreads(n):
+    #n is the max distance
+    leftThread = Thread(target=detect, args=[TRIG_L, ECHO_L, "L", n])
+    irleftThread = Thread(target=detectIR, args=[1, n])
+    irRightThread = Thread(target=detectIR, args=[0, n])
+    rightThread = Thread(target=detect, args=[TRIG_R, ECHO_R, "R", n])
         
     leftThread.start()
     irleftThread.start()
 #    irRightThread.start()
     rightThread.start()
-    
+
+
+
 def clearStack():
     leftStack=[]
     #middleStack=[]
     rightStack=[]
-def rawPlot():
-    for x in range(200):
-        startThreads()
+    
+# plotting distance data from all sensors
+def rawPlot(n):
+    #n is max distance
+    for x in range(500):
+        startThreads(n)
     plot.plot(leftStack, leftDist, label="left")
     plot.plot(irStackLeft, irLeft,label="IR left")
     plot.plot(irStackRight, irRight,label="IR right")
@@ -203,12 +201,14 @@ def rawPlot():
     plot.ylabel('DISTANCE (cm)')
     plot.legend()
     plot.show()
-def dataPlotting():
+    
+#plotting processed data
+def dataPlotting(n):
     for x in range(400):
-        startThreads()
+        startThreads(n)
     for y in range(len(left)):
         if(y<len(right) and y< len(irLeftBin)):
-            diff.append(left[y] -irLeftBin[y]-right[y])
+            diff.append(left[y] -irLeftBin[y]-right[y]+1)
             diffStack.append(leftStack[y])
     plot.plot(diffStack, diff, label="processed")
     plot.xlabel('TIME')
@@ -216,107 +216,156 @@ def dataPlotting():
     plot.legend()
     plot.show()
 
-def getDirectionCurve(flagNeg, flagPos):
-    if(len(left) >0 and len(right) >0 ):
-        x = left.pop()
-        y = right.pop()
-        delta = x-y
+def check(test, val):
+    if(val == test):
+        return 1
     else:
-        delta=0
-    #set flags
-    
-    if(flagNeg==False and delta==1):
-        flagPos = True
-        timeStart = time.time()
-    if(flagPos==False and delta==-1):
-        flagNeg = True
-        timeStart = time.time()
-    #check for change in sign: i.e., diff => -1 to 1 =>RTL
-    #also will time out if no gesture detected
-    while flagNeg==True:
-        timeEnd = time.time()
-        if(delta==1):
+        return 0
+
+
+def swipeDetect( maxD, delay, timeout):
+    #flags 
+    flagPos = False
+    flagNeg =False
+    flagDetect = False
+
+    flagDetect = False
+    startTime = 0
+    checkTime=0
+    while True:
+                 
+        startThreads(maxD)
+        if(len(left) >0 and len(right) >0 and len(irLeftBin) >0 ):
+            l = left.pop()
+            m = irLeftBin.pop()
+            r = right.pop()
+                    
+            if(l==0 and r==0 and m ==0):
+                delta=0
+            else:
+                delta = l - m-r+1
+        else:
+            delta=0
+                #set flags
+                
+        diff.append(delta)
+        diffStack.append(time.time())
+        if(flagNeg==False and flagDetect ==False and delta==1):
+            flagPos = True
+            startTime = time.time()
+        if(flagPos==False and flagDetect ==False and delta==-1):
+            flagNeg = True
+            startTime = time.time()
+        checkTime= time.time()
+        elapsed = checkTime-startTime
+                
+                #if no gesture detected within 1 seconds set the flags down 
+        if elapsed > timeout:
+            flagNeg =False
+            flagPos =False
+            flagDetect = False  
+                #once gesture detected set flags down to sense next one
+        if(flagDetect ==True and delta==0):
+            flagDetect = False
+            flagNeg = False
+            flagPos = False
+        if(flagNeg==True and delta==1):
+            
+            flagDetect = True
+            sio.emit('edge.swipe', data={'type': 'right'})
             print("---->")
-            flagNeg = False
-        elif((timeEnd-timeStart)>2):
-            flagNeg = False
-    while flagPos==True:
-        timeEnd = time.time()
-        if(delta==-1):
-            flagPos = False
+            time.sleep(delay)
+        if(flagPos==True and delta==-1):
+            
+            flagDetect = True
+            sio.emit('edge.swipe', data={'type': 'left'})
             print("<----")
-        elif (timeEnd-timeStart)>2:
-            flagPos = False
-def getDirection():
-    if(len(leftStack) >0 and len(rightStack) >0 ):
-        leftTime = leftStack.pop()
-        rightTime = rightStack.pop()
-    else:
-        leftTime = 0
-        rightTime = 0
-    diff = leftTime -rightTime
-    if(diff < 0):
-        return "right"
-    elif(diff> 0):
-        return "left"
-  
-if __name__ == '__main__':
-    try:
-        
-        #startThreads()
-        #rawPlot() 
-        #dataPlotting()
-        
-        #semi functional ultrasonic solution
-        
-        startTime=0
-        checkTime=0
-        while True:
-            startThreads()
-            if(len(left) >0 and len(right) >0 and len(irLeftBin)):
+            time.sleep(delay)
+
+
+def swipeDetectTest(maxD, delay, timeout, timeoutTest, n):
+        #flags 
+    flagPos = False
+    flagNeg =False
+    flagDetect = False
+
+    flagDetect = False
+    total = 0
+    startTime = 0
+    checkTime=0
+    for i in range(n):
+        sensed = False
+        x=randint(0,1)
+        print(testSequence[x])
+        startTime2 = time.time()
+        while sensed == False:
+                
+            startThreads(maxD)
+            if(len(left) >0 and len(right) >0 and len(irLeftBin) >0 ):
                 l = left.pop()
                 m = irLeftBin.pop()
                 r = right.pop()
-                
-                delta = l-m -r +1
+                if(l==0 and r==0 and m ==0):
+                    delta=0
+                else:
+                    delta = l - m-r+1
             else:
                 delta=0
-            #set flags
-            
+                #set flags
+                
             diff.append(delta)
             diffStack.append(time.time())
-            if(flagNeg==False and delta==1):
+            if(flagNeg==False and flagDetect ==False and delta==1):
                 flagPos = True
                 startTime = time.time()
-            if(flagPos==False and delta==-1):
+            if(flagPos==False and flagDetect ==False and delta==-1):
                 flagNeg = True
                 startTime = time.time()
             checkTime= time.time()
             elapsed = checkTime-startTime
-            #if no gesture detected within 1 seconds set the flags down 
+            elapsed2 =  checkTime - startTime2
+                
+
+            if elapsed2 > timeoutTest:
+                sensed = True
+                #once gesture detected set flags down to sense next one
+                    #if no gesture detected within 1 seconds set the flags down 
             if elapsed > timeout:
                 flagNeg =False
                 flagPos =False
-            
+                flagDetect = False
+                    
+                    #once gesture detected set flags down to sense next one
+            if(flagDetect ==True and delta==0):
+                flagDetect = False
+                flagNeg = False
+                flagPos = False
             if(flagNeg==True and delta==1):
-                flagNeg =False
-                sio.emit('edge.swipe', data={'type': 'right'})
+                flagDetect = True
+                total = total + check(testSequence[x], "swipe right")
                 print("---->")
+                sensed = True
                 time.sleep(delay)
             if(flagPos==True and delta==-1):
-                flagPos = False
-                sio.emit('edge.swipe', data={'type': 'left'})
+                flagDetect = True
                 print("<----")
+                total = total + check(testSequence[x], "swipe left")
+                sensed = True
                 time.sleep(delay)
-            #gesture =getDirection()
-            #printMessage(gesture)
-            #clearStack()
-            
-        plot.plot(diffStack, diff, label="processed")
-        plot.xlabel('TIME')
-        plot.ylabel('DISTANCE (cm)')
-        plot.show()
-        
+    
+    print(total, "/",n)    
+    plot.plot(diffStack, diff, label="processed")
+    plot.xlabel('TIME')
+    plot.ylabel('DISTANCE (cm)')
+    plot.show()
+  
+if __name__ == '__main__':
+    try:
+
+#        rawPlot(50) 
+#        dataPlotting(50)
+        swipeDetectTest(50,0.5,0.3,5,10)
+#        swipeDetect(50,0.5,0.3) 
         
     except KeyboardInterrupt:
         sio.disconnect()
