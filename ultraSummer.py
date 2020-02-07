@@ -19,8 +19,7 @@ sio = socketio.Client()
 @sio.on('connect')
 def on_connect():
     print('connected to the brain')
-
-#sio.connect('http://summer-dev.us-east-1.elasticbeanstalk.com')
+sio.connect('http://summer-dev.us-east-1.elasticbeanstalk.com')
 
 
 GPIO.setmode(GPIO.BCM)
@@ -82,18 +81,6 @@ GPIO.setwarnings(True)
 #log.info('Listening for socket...')
 
 
-
-
-#@sio.on('edge.startEdge')
-def start(data):
-    global run
-    run = True
-    GPIO.setmode(GPIO.BOARD)
-    mainThread = Thread(target=useThreeUltrasonics, args=[TRIG_1, ECHO_1, TRIG_2, ECHO_2, TRIG_3, ECHO_3])
-    mainThread.daemon = True
-    mainThread.start()
-    log.info('Starting...')
-    sio.emit('edge.startSuccessful')
     
 
     
@@ -185,9 +172,10 @@ def startThreads(n):
 
 def clearStack():
     leftStack=[]
+    leftDist = []
     #middleStack=[]
     rightStack=[]
-    
+    rightDist =[]
 # plotting distance data from all sensors
 def rawPlot(n):
     #n is max distance
@@ -202,19 +190,7 @@ def rawPlot(n):
     plot.legend()
     plot.show()
     
-#plotting processed data
-def dataPlotting(n):
-    for x in range(400):
-        startThreads(n)
-    for y in range(len(left)):
-        if(y<len(right) and y< len(irLeftBin)):
-            diff.append(left[y] -irLeftBin[y]-right[y]+1)
-            diffStack.append(leftStack[y])
-    plot.plot(diffStack, diff, label="processed")
-    plot.xlabel('TIME')
-    plot.ylabel('DISTANCE (cm)')
-    plot.legend()
-    plot.show()
+ 
 
 def check(test, val):
     if(val == test):
@@ -358,16 +334,51 @@ def swipeDetectTest(maxD, delay, timeout, timeoutTest, n):
     plot.xlabel('TIME')
     plot.ylabel('DISTANCE (cm)')
     plot.show()
-  
+    
+def hover(dist, delay, en):
+    flagLeft = False
+    flagRight =False
+    flagSelect = False
+    while True:
+        startThreads(dist)
+        if(len(leftDist)>0):
+            l = leftDist.pop()
+        else:
+            l = 100
+        if(len(rightDist)>0):
+            r = rightDist.pop()
+        else:
+            r = 100
+        
+        
+        if( l< dist):
+            sio.emit('edge.swipe', data={'type': 'left'})
+            
+            print('<----')
+            if en== True:
+                time.sleep(delay*(l/10))
+            else:
+                time.sleep(delay)
+        elif(r< dist):
+            sio.emit('edge.swipe', data={'type': 'right'})
+            
+            print('---->')
+            if en== True:
+                time.sleep(delay*(l/10))
+            else:
+                time.sleep(delay)
+        else:
+            sio.emit('edge.swipe', data={'type': 'select'})
+            
 if __name__ == '__main__':
     try:
 
 #        rawPlot(50) 
-#        dataPlotting(50)
-        swipeDetectTest(50,0.5,0.3,5,10)
+#        swipeDetectTest(50,0.5,0.3,5,10)
 #        swipeDetect(50,0.5,0.3) 
-        
+        hover(40,0.5, False) 
     except KeyboardInterrupt:
         sio.disconnect()
         print("terminated by user")
+        clearStack()
         GPIO.cleanup()

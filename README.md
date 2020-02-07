@@ -32,6 +32,8 @@ These variables can be modified to better perform under different environments.
 
 ![](./images/SideMountTV.jpeg)
 
+
+
 ### Raspberry Pi Pin Map
 ![](./images/raspberryPinMap.jpg)
 
@@ -115,6 +117,5 @@ When only using the 2 ultrasonic sensors mounted to the side of the TV screen:
 We have a built in testing function that allows you to run through a random series of gestures and the system checks for whether or not they were correct. The result is then outputed, using swipeDetectTest(n). Where n is the number of trials. On completion the function also generates a processed data plot for further analysis. 
 
 ![](./images/sampleTestOutput.png)
-
 
 
