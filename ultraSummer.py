@@ -19,7 +19,9 @@ sio = socketio.Client()
 @sio.on('connect')
 def on_connect():
     print('connected to the brain')
-sio.connect('http://summer-dev.us-east-1.elasticbeanstalk.com')
+
+
+sio.connect('http://summer-dev.us-east-1.elasticbeanstalk.com/')
 
 
 GPIO.setmode(GPIO.BCM)
@@ -190,150 +192,23 @@ def rawPlot(n):
     plot.legend()
     plot.show()
     
- 
-
-def check(test, val):
-    if(val == test):
-        return 1
-    else:
-        return 0
 
 
-def swipeDetect( maxD, delay, timeout):
-    #flags 
-    flagPos = False
-    flagNeg =False
-    flagDetect = False
 
-    flagDetect = False
-    startTime = 0
-    checkTime=0
-    while True:
-                 
-        startThreads(maxD)
-        if(len(left) >0 and len(right) >0 and len(irLeftBin) >0 ):
-            l = left.pop()
-            m = irLeftBin.pop()
-            r = right.pop()
-                    
-            if(l==0 and r==0 and m ==0):
-                delta=0
-            else:
-                delta = l - m-r+1
-        else:
-            delta=0
-                #set flags
-                
-        diff.append(delta)
-        diffStack.append(time.time())
-        if(flagNeg==False and flagDetect ==False and delta==1):
-            flagPos = True
-            startTime = time.time()
-        if(flagPos==False and flagDetect ==False and delta==-1):
-            flagNeg = True
-            startTime = time.time()
-        checkTime= time.time()
-        elapsed = checkTime-startTime
-                
-                #if no gesture detected within 1 seconds set the flags down 
-        if elapsed > timeout:
-            flagNeg =False
-            flagPos =False
-            flagDetect = False  
-                #once gesture detected set flags down to sense next one
-        if(flagDetect ==True and delta==0):
-            flagDetect = False
-            flagNeg = False
-            flagPos = False
-        if(flagNeg==True and delta==1):
-            
-            flagDetect = True
-            sio.emit('edge.swipe', data={'type': 'right'})
-            print("---->")
-            time.sleep(delay)
-        if(flagPos==True and delta==-1):
-            
-            flagDetect = True
-            sio.emit('edge.swipe', data={'type': 'left'})
-            print("<----")
-            time.sleep(delay)
+global startBool    
+startBool = False
 
-
-def swipeDetectTest(maxD, delay, timeout, timeoutTest, n):
-        #flags 
-    flagPos = False
-    flagNeg =False
-    flagDetect = False
-
-    flagDetect = False
-    total = 0
-    startTime = 0
-    checkTime=0
-    for i in range(n):
-        sensed = False
-        x=randint(0,1)
-        print(testSequence[x])
-        startTime2 = time.time()
-        while sensed == False:
-                
-            startThreads(maxD)
-            if(len(left) >0 and len(right) >0 and len(irLeftBin) >0 ):
-                l = left.pop()
-                m = irLeftBin.pop()
-                r = right.pop()
-                if(l==0 and r==0 and m ==0):
-                    delta=0
-                else:
-                    delta = l - m-r+1
-            else:
-                delta=0
-                #set flags
-                
-            diff.append(delta)
-            diffStack.append(time.time())
-            if(flagNeg==False and flagDetect ==False and delta==1):
-                flagPos = True
-                startTime = time.time()
-            if(flagPos==False and flagDetect ==False and delta==-1):
-                flagNeg = True
-                startTime = time.time()
-            checkTime= time.time()
-            elapsed = checkTime-startTime
-            elapsed2 =  checkTime - startTime2
-                
-
-            if elapsed2 > timeoutTest:
-                sensed = True
-                #once gesture detected set flags down to sense next one
-                    #if no gesture detected within 1 seconds set the flags down 
-            if elapsed > timeout:
-                flagNeg =False
-                flagPos =False
-                flagDetect = False
-                    
-                    #once gesture detected set flags down to sense next one
-            if(flagDetect ==True and delta==0):
-                flagDetect = False
-                flagNeg = False
-                flagPos = False
-            if(flagNeg==True and delta==1):
-                flagDetect = True
-                total = total + check(testSequence[x], "swipe right")
-                print("---->")
-                sensed = True
-                time.sleep(delay)
-            if(flagPos==True and delta==-1):
-                flagDetect = True
-                print("<----")
-                total = total + check(testSequence[x], "swipe left")
-                sensed = True
-                time.sleep(delay)
     
-    print(total, "/",n)    
-    plot.plot(diffStack, diff, label="processed")
-    plot.xlabel('TIME')
-    plot.ylabel('DISTANCE (cm)')
-    plot.show()
+
+@sio.on('edge.startGame')
+def startGame(data):
+    global startBool
+    startBool= True
+    
+@sio.on('edge.stopGame')
+def stopGame(data):
+    global startBool
+    startBool = False
     
 def hover(dist, delay, en):
     flagLeft = False
@@ -350,26 +225,25 @@ def hover(dist, delay, en):
         else:
             r = 100
         
-        
-        if( l< dist):
-            sio.emit('edge.swipe', data={'type': 'left'})
-            
-            print('<----')
-            if en== True:
-                time.sleep(delay*(l/10))
-            else:
-                time.sleep(delay)
-        elif(r< dist):
-            sio.emit('edge.swipe', data={'type': 'right'})
-            
-            print('---->')
-            if en== True:
-                time.sleep(delay*(l/10))
-            else:
-                time.sleep(delay)
-        else:
-            sio.emit('edge.swipe', data={'type': 'select'})
-            
+        if(startBool==True):
+            if( l< dist):
+                sio.emit('edge.select')
+                
+                print('<----')
+                if en== True:
+                    time.sleep(delay*(l/10))
+                else:
+                    time.sleep(delay)
+            elif(r< dist):
+                sio.emit('edge.scroll')
+                print('---->')
+                if en== True:
+                    time.sleep(delay*(l/10))
+                else:
+                    time.sleep(delay)
+               
+
+
 if __name__ == '__main__':
     try:
 
@@ -377,8 +251,11 @@ if __name__ == '__main__':
 #        swipeDetectTest(50,0.5,0.3,5,10)
 #        swipeDetect(50,0.5,0.3) 
         hover(40,0.5, False) 
+
     except KeyboardInterrupt:
         sio.disconnect()
         print("terminated by user")
         clearStack()
         GPIO.cleanup()
+        
+
