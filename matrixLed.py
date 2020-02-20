@@ -18,6 +18,11 @@ boolLED=False
 def turnLedOn(data):
     global boolLED
     boolLED = True
+    
+@sio.on('edge.ledOFF')
+def turnLedOff(data):
+    global boolLED
+    boolLED = False
 
 everloop = ['black'] * led.length
 
