@@ -57,3 +57,22 @@ while True:
         led.set(everloop)
 
         sleep(.035)
+    else:
+        for i in range(len(everloop)):
+            r = 0
+            g = 0
+            b = 0
+
+            counter += ledAdjust
+
+            everloop[i] = {'r':r, 'g':g, 'b':b}
+
+        # Slowly show rainbow
+        if tick != 0:
+            for i in reversed(range(tick)):
+                everloop[i] = {}
+            tick -= 1
+
+        led.set(everloop)
+
+        sleep(.035)
