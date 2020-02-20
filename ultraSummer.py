@@ -12,14 +12,26 @@ import socketio
 from cloudwatch_logger import CloudwatchLogger
 from matplotlib.animation import FuncAnimation
 from random import randint
-
+global startEdge
+startEdge = False
 
 sio = socketio.Client()
 
 @sio.on('connect')
 def on_connect():
     print('connected to the brain')
-
+    
+@sio.on('edge.startEdge')
+def on_startEdge(data):
+    print('------START EDGE RECEIVED------')
+    global startEdge
+    startEdge = True
+    
+@sio.on('edge.stopEdge')
+def on_stopEdge(data):
+    print('------STOP EDGE RECEIVED------')
+    global startEdge
+    startEdge = False
 
 sio.connect('http://summer-dev.us-east-1.elasticbeanstalk.com/')
 
@@ -225,7 +237,7 @@ def hover(dist, delay, en):
         else:
             r = 100
         
-        if(startBool==True):
+        if(startBool and startEdge):
             if( l< dist):
                 sio.emit('edge.select')
                 
@@ -249,7 +261,8 @@ if __name__ == '__main__':
 
 #        rawPlot(50) 
 #        swipeDetectTest(50,0.5,0.3,5,10)
-#        swipeDetect(50,0.5,0.3) 
+#        swipeDetect(50,0.5,0.3)
+        
         hover(40,0.5, False) 
 
     except KeyboardInterrupt:
