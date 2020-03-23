@@ -21,6 +21,7 @@ sio = socketio.Client()
 def on_connect():
     print('connected to the brain')
 
+
     
 @sio.on('edge.startEdge')
 def on_startEdge(data):
@@ -33,6 +34,7 @@ def on_stopEdge(data):
     print('------STOP EDGE RECEIVED------')
     global startEdge
     startEdge = False
+
 
 
 sio.connect('http://summer-dev.us-east-1.elasticbeanstalk.com/')
@@ -206,6 +208,8 @@ def rawPlot(n):
     plot.show()
     
 
+
+
 global startBool    
 startBool = True
 
@@ -256,19 +260,23 @@ def hover(dist, delay, en):
             else:
                 sio.emit('edge.unselect')
                
+
 if __name__ == '__main__':
     try:
 
 #        rawPlot(50) 
 #        swipeDetectTest(50,0.5,0.3,5,10)
+
 #        swipeDetect(50,0.5,0.3)
 
          hover(50,0.5,False)#0.5 delay 
+
 
     except KeyboardInterrupt:
         sio.disconnect()
         print("terminated by user")
         clearStack()
+
         GPIO.cleanup()
         
 
